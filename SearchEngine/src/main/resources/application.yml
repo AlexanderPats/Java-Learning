@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    username: root
+    password: skillbox
+    url:
+      jdbc:mysql://localhost:3306/search_engine?
+      useSSL=false&
+      requireSSL=false&
+      allowPublicKeyRetrieval=true&
+      createDatabaseIfNotExist=true
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+#        connection:
+#        dialect: org.hibernate.dialect.MySQLDialect
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yml
+    enabled: true
+    drop-first: false
+
+logging:
+  file:
+    name: logs/SearchEngine.log
+#  level:
+#    root: "warn"
+#    org.springframework.web: "warn"
+#    org.hibernate: "warn"
+#  pattern:
+#    console: "%d{yyyy-MM-dd HH:mm:ss} %level - %msg%n"
+#    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %level %logger - %msg%n"
+
+
+# example values
+
+indexing-settings:
+  exclude-url-parameters: true # default value: true
+  path-max-length: 767 # length of path without main url. MAX allowed value is 767
+  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0 # default value: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0
+  referrer: https://www.yandex.ru/ # default value: https://www.yandex.ru/
+  request-timeout: 700 # default value: 1000
+  sites:
+    - url: https://www.fc-baltika.ru
+      name: Baltika
+    - url: https://www.fc-baltika.ru/
+      name: BALTIKA
+    - url: https://www.fc-baltika.su/
+      name: Baltika.su
+    - url: https://www.lenta.ru
+      name: Лента.ру
+    - url: https://www.skillbox.ru
+      name: Skillbox
+    - url: https://www.skillbox.ru
+      name: Skillbox
+    - url: https://www.playback.ru
+      name: PlayBack.Ru
+    - url: https://www.playback.ru
+      name: PlayBack.Ru

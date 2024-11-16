@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0.01
+      author: Pats Alexander
+      comment: Setting schema's charset and collation
+      changes:
+        - sql:
+            ALTER DATABASE CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+        - tagDatabase:
+            tag: 0.01

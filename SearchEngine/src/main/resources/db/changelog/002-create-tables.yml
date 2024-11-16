@@ -1,0 +1,174 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 0.02
+      author: Pats Alexander
+      comment: Creating table 'site'
+      preConditions:
+        - not:
+            - tableExists:
+                - tableName: site
+        - onFail: MARK_RAN
+      changes:
+        - createTable:
+            tableName: site
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: status
+                  type: ENUM('INDEXING', 'INDEXED', 'FAILED')
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status_time
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_error
+                  type: TEXT
+              - column:
+                  name: url
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 0.03
+      author: Pats Alexander
+      comment: Creating table 'page'
+      preConditions:
+        - not:
+            - tableExists:
+                - tableName: page
+        - onFail: MARK_RAN
+      changes:
+        - createTable:
+            tableName: page
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: site_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_page_site
+                    references: site(id)
+                    deleteCascade: true
+              - column:
+                  name: path
+                  type: VARCHAR(767)
+                  constraints:
+                    nullable: false
+                    fulltextKey:
+              - column:
+                  name: code
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: MEDIUMTEXT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: page
+            columnNames: site_id, path
+            constraintName: Idx__page__site_id__path
+
+  - changeSet:
+      id: 0.04
+      author: Pats Alexander
+      comment: Creating table 'lemma'
+      preConditions:
+        - not:
+            - tableExists:
+                - tableName: lemma
+        - onFail: MARK_RAN
+      changes:
+        - createTable:
+            tableName: lemma
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: site_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_lemma_site
+                    references: site(id)
+                    deleteCascade: true
+              - column:
+                  name: lemma
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: frequency
+                  type: INT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 0.05
+      author: Pats Alexander
+      comment: Creating table 'index'
+      preConditions:
+        - not:
+            - tableExists:
+                - tableName: index
+        - onFail: MARK_RAN
+      changes:
+        - createTable:
+            tableName: index
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: page_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_index_page
+                    references: page(id)
+                    deleteCascade: true
+              - column:
+                  name: lemma_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_index_lemma
+                    references: lemma(id)
+                    deleteCascade: true
+              - column:
+                  name: rank
+                  type: FLOAT
+                  constraints:
+                    nullable: false
+        - tagDatabase:
+            tag: 0.02

@@ -41,8 +41,6 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
     private String referrer;
     private final PageCRUDService pageService;
 
-    private IndexResultMessage resultMessage = IndexResultMessage.SITE_IS_UNAVAILABLE;
-
     public SiteParsing(
             SiteEntity siteEntity,
             String url,
@@ -62,44 +60,27 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
         if (stoppingIndexing) { return IndexResultMessage.INDEXING_IS_CANCELED; }
 
         Document htmlDoc = getHtmlDocument(url,indexingSettings);
-        if (htmlDoc == null) { return resultMessage; }
+        if (htmlDoc == null) { return IndexResultMessage.SITE_IS_UNAVAILABLE; }
 
         int responseCode = htmlDoc.connection().response().statusCode();
-        if (!isSuccessfulCode(responseCode)) { return resultMessage; }
+        if (!isSuccessfulCode(responseCode)) { return IndexResultMessage.SITE_IS_UNAVAILABLE; }
 
-        if (!hasAcceptedContent(htmlDoc)) {
-            if ( resultMessage.equals(IndexResultMessage.SITE_IS_UNAVAILABLE) ) {
-                resultMessage = IndexResultMessage.SITE_HAS_NO_CONTENT;
-            }
-            return resultMessage;
-        }
-
-        String mainPageUrl = siteEntity.getUrl();
-        String path;
-        if ( url.equals(mainPageUrl) ) { path = "/"; }
-        else { path = url.substring(mainPageUrl.length()); }
-
-        if (pageService.getBySiteAndPath(siteEntity, path) != null) { return resultMessage; }
-
-        Page page = new Page(siteEntity, path, responseCode, htmlDoc.toString());
-        pageService.save(page);
-        resultMessage = IndexResultMessage.INDEXING_IS_COMPLETED;
-//        System.out.println(path);
-//        System.out.println(htmlDoc.connection().response().statusCode());
-//        System.out.println(htmlDoc.connection().response().contentType());
-//        System.out.println(referrer);
+        if (!hasAcceptedContent(htmlDoc)) { return IndexResultMessage.SITE_HAS_NO_CONTENT; }
 
         List<SiteParsing> taskList = new LinkedList<>();
 
+        String mainPageUrl = siteEntity.getUrl();
         String htmlElementPattern = "a[href^=" + mainPageUrl + "],[href^=/]";
         Elements htmlElements = htmlDoc.select(htmlElementPattern);
 
         for (Element element : htmlElements) {
             if (stoppingIndexing) { break; }
 
-            path = element.attr("href");
+            String path = element.attr("href");
             if ( path.startsWith("//") ) { continue; }
             if ( path.length() > indexingSettings.getPathMaxLength()) { continue; }
+
+            if ( path.equals(mainPageUrl) ) { path = "/"; }
             if ( path.startsWith(mainPageUrl) ) { path = path.substring(mainPageUrl.length()); }
             if ( path.indexOf('#') >= 0 ) { path = path.substring(0, path.indexOf('#')); }
 
@@ -107,6 +88,12 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
             if (path.indexOf('?') >= 0) { pathWoParams = path.substring(0, path.indexOf('?')); }
             if (indexingSettings.isExcludeUrlParameters()) { path = pathWoParams; }
             if (isRejectedPath(pathWoParams)) { continue; }
+
+            if (pageService.getBySiteAndPath(siteEntity, path) != null) { continue; }
+
+            Page page = new Page(siteEntity, path, responseCode, htmlDoc.toString());
+            try { pageService.save(page); }
+            catch (Exception e) {e.printStackTrace();}
 
             referrer = url.equals(mainPageUrl) ? url.concat("/") : url;
 
@@ -126,9 +113,9 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
             else { task.join(); }
         }
 
-        if (stoppingIndexing) { resultMessage = IndexResultMessage.INDEXING_IS_CANCELED; }
+        if (stoppingIndexing) { return IndexResultMessage.INDEXING_IS_CANCELED; }
+        else { return IndexResultMessage.INDEXING_IS_COMPLETED; }
 
-        return resultMessage;
     }
 
 

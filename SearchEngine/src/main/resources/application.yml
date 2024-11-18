@@ -21,7 +21,7 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yml
     enabled: true
-    drop-first: false
+    drop-first: true
 
 logging:
   file:
@@ -46,12 +46,12 @@ indexing-settings:
   sites:
     - url: http://affix.ru
       name: Affix
-#    - url: https://www.fc-baltika.ru
-#      name: Baltika
-#    - url: https://www.fc-baltika.ru/
-#      name: BALTIKA
-#    - url: https://www.fc-baltika.su/
-#      name: Baltika.su
+    - url: https://www.fc-baltika.ru
+      name: Baltika
+    - url: https://www.fc-baltika.ru/
+      name: BALTIKA
+    - url: https://www.fc-baltika.su/
+      name: Baltika.su
 #    - url: https://www.lenta.ru
 #      name: Лента.ру
 #    - url: https://www.skillbox.ru

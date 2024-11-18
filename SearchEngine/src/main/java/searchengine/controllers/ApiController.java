@@ -1,6 +1,7 @@
 package searchengine.controllers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,8 +20,10 @@ public class ApiController {
     private final StatisticsService statisticsService;
     private final SitesIndexService sitesIndexService;
 
-    boolean indexingIsRunning = false;
-    Thread indexSitesThread;
+    @Setter
+    private static boolean indexingIsRunning = false;
+
+    private Thread indexSitesThread;
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
@@ -35,7 +38,6 @@ public class ApiController {
         indexingIsRunning = true;
         indexSitesThread = new Thread(sitesIndexService::startSitesIndexing);
         indexSitesThread.start();
-//        sitesIndexService.startSitesIndexing();
         return ResponseEntity.ok(new IndexingResponse(true, null));
     }
 

@@ -13,6 +13,7 @@ import searchengine.model.SiteStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,8 +39,10 @@ public class SitesIndexService {
         stopIndexingFlag = false;
         SiteParsing.setStoppingIndexing(false);
         long startTime = System.currentTimeMillis();
-        int threadsCount = Runtime.getRuntime().availableProcessors();
+        int coresCount = Runtime.getRuntime().availableProcessors();
+        int threadsCount = Math.min(coresCount, indexingSettings.getSites().size());
         poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsCount);
+        CountDownLatch cdLatch = new CountDownLatch(threadsCount);
 
         for (Site site : indexingSettings.getSites()) {
             if (stopIndexingFlag) { break; }
@@ -48,17 +51,27 @@ public class SitesIndexService {
                 SiteEntity siteEntity = new SiteEntity(SiteStatus.INDEXING, null, site.getUrl(), site.getName());
                 siteService.save(siteEntity);
                 IndexResultMessage indexResultMsg = parseSite(siteEntity);
-                if (stopIndexingFlag) { Thread.currentThread().interrupt(); }
+//                if (stopIndexingFlag) { Thread.currentThread().interrupt(); }
                 if (indexResultMsg == IndexResultMessage.INDEXING_IS_COMPLETED) {
                     siteService.changeSiteStatusByUrl(siteEntity.getUrl(), SiteStatus.INDEXED, null);
                 } else {
                     siteService.changeSiteStatusByUrl(siteEntity.getUrl(), SiteStatus.FAILED, indexResultMsg.toString());
                 }
+                cdLatch.countDown();
             });
         }
+
+        try { cdLatch.await(); }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+            log.warn("Метод cdLatch.await() вызвал исключение: {}", e.getMessage());
+        }
+        fjpList.forEach(ForkJoinPool::shutdown);
         poolExecutor.shutdown();
         System.out.println("Индексация завершена." + System.lineSeparator() +
-                "Затраченное время: " + (System.currentTimeMillis() - startTime) + " мс");
+                "Затраченное время: " + (System.currentTimeMillis() - startTime)/1000 + " с");
+
+    }
 
 //        indexingSettings.getSites().parallelStream().forEach(site -> {
 //            siteService.deleteByUrl(site.getUrl());
@@ -71,14 +84,13 @@ public class SitesIndexService {
 //                siteService.changeSiteStatusByUrl(siteEntity.getUrl(), SiteStatus.FAILED, indexResultMsg.toString());
 //            }
 //        });
-    }
+
 
     public void stopSiteIndexing() {
         log.info("Sites indexing is interrupted by user!");
         stopIndexingFlag = true;
         SiteParsing.setStoppingIndexing(true);
         fjpList.forEach(ForkJoinPool::shutdown);
-        poolExecutor.shutdown();
         indexingSettings.getSites().forEach(site -> {
             if (siteService.getByUrl(site.getUrl()).getStatus() == SiteStatus.INDEXING) {
                 siteService.changeSiteStatusByUrl(
@@ -91,7 +103,13 @@ public class SitesIndexService {
     }
 
     public IndexResultMessage parseSite(SiteEntity siteEntity) {
-        SiteParsing siteParsing = new SiteParsing(siteEntity, siteEntity.getUrl(), indexingSettings, pageService);
+        SiteParsing siteParsing = new SiteParsing(
+                siteEntity,
+                siteEntity.getUrl(),
+                indexingSettings,
+                indexingSettings.getReferrer(),
+                pageService
+        );
         ForkJoinPool forkJoinPool = new ForkJoinPool();
         fjpList.add(forkJoinPool);
         return forkJoinPool.invoke(siteParsing);

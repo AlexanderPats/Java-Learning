@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.indexing.ErrMessage;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.SiteParsing;
 import searchengine.services.SitesIndexService;
 import searchengine.services.StatisticsService;
 
@@ -33,9 +32,10 @@ public class ApiController {
         if (indexingIsRunning) {
             return ResponseEntity.ok(new IndexingResponse(false, ErrMessage.INDEXING_ALREADY_STARTED.toString()));
         }
-        indexSitesThread = new Thread(sitesIndexService::startSitesIndexing);
         indexingIsRunning = true;
+        indexSitesThread = new Thread(sitesIndexService::startSitesIndexing);
         indexSitesThread.start();
+//        sitesIndexService.startSitesIndexing();
         return ResponseEntity.ok(new IndexingResponse(true, null));
     }
 
@@ -45,8 +45,8 @@ public class ApiController {
             return ResponseEntity.ok(new IndexingResponse(false, ErrMessage.INDEXING_NOT_STARTED.toString()));
         }
         sitesIndexService.stopSiteIndexing();
-        indexSitesThread.interrupt();
         indexingIsRunning = false;
+        indexSitesThread.interrupt();
         return ResponseEntity.ok(new IndexingResponse(true, null));
     }
 

@@ -44,19 +44,21 @@ indexing-settings:
   referrer: https://www.yandex.ru/ # default value: https://www.yandex.ru/
   request-timeout: 700 # default value: 1000
   sites:
-    - url: https://www.fc-baltika.ru
-      name: Baltika
-    - url: https://www.fc-baltika.ru/
-      name: BALTIKA
-    - url: https://www.fc-baltika.su/
-      name: Baltika.su
-    - url: https://www.lenta.ru
-      name: Лента.ру
-    - url: https://www.skillbox.ru
-      name: Skillbox
-    - url: https://www.skillbox.ru
-      name: Skillbox
-    - url: https://www.playback.ru
-      name: PlayBack.Ru
-    - url: https://www.playback.ru
-      name: PlayBack.Ru
+    - url: http://affix.ru
+      name: Affix
+#    - url: https://www.fc-baltika.ru
+#      name: Baltika
+#    - url: https://www.fc-baltika.ru/
+#      name: BALTIKA
+#    - url: https://www.fc-baltika.su/
+#      name: Baltika.su
+#    - url: https://www.lenta.ru
+#      name: Лента.ру
+#    - url: https://www.skillbox.ru
+#      name: Skillbox
+#    - url: https://www.skillbox.ru
+#      name: Skillbox
+#    - url: https://www.playback.ru
+#      name: PlayBack.Ru
+#    - url: https://www.playback.ru
+#      name: PlayBack.Ru

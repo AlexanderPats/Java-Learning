@@ -10,8 +10,6 @@ import searchengine.model.SiteStatus;
 import searchengine.repositories.SiteRepository;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 
 @Service

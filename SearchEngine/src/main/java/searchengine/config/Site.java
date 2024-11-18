@@ -32,9 +32,6 @@ public class Site {
 
     @Override
     public String toString() {
-        return "Site{" +
-                "url='" + url + '\'' +
-                ", name='" + name + '\'' +
-                '}';
+        return "Site{" + "url='" + url + '\'' + ", name='" + name + '\'' + '}';
     }
 }

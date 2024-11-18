@@ -1,6 +1,5 @@
 package searchengine.services;
 
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -16,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.RecursiveTask;
 
-//@RequiredArgsConstructor
 @Slf4j
 public class SiteParsing extends RecursiveTask<IndexResultMessage> {
 
@@ -29,8 +27,8 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
                     ".zip", ".rar", ".7z", ".mp3", ".mp4", ".mkv", ".avi", ".mpg", ".mpeg",
                     ".docx", ".xlsx", ".pptx",".doc", ".xls", ".ppt", ".odt", ".odf", ".odp", ".pdf"
             };
-    // Пока не пригодилось. Удалить?
-    private static final String[] TEXT_FILE_EXTENSIONS = {".htm", ".html", ".php", ".jsp", ".txt", ".xml"};
+//    Пока не пригодилось. Удалить?
+//    private static final String[] TEXT_FILE_EXTENSIONS = {".htm", ".html", ".php", ".jsp", ".txt", ".xml"};
 
     @Setter
     private static boolean stoppingIndexing = false;

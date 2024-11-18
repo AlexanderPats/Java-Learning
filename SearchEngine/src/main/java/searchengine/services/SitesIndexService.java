@@ -1,10 +1,7 @@
 package searchengine.services;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.stereotype.Service;
 import searchengine.config.IndexingSettings;
 import searchengine.config.Site;
@@ -28,12 +25,8 @@ public class SitesIndexService {
     private final PageCRUDService pageService;
     private final IndexingSettings indexingSettings;
 
-
     private List<ForkJoinPool> fjpList = new ArrayList<>();
     private boolean stopIndexingFlag = false;
-    private ThreadPoolExecutor poolExecutor;
-
-//    private static final IndexResultMessage indexResultMessage;
 
     public void startSitesIndexing() {
         log.info("Start indexing for sites: {}", indexingSettings.getSites());
@@ -42,7 +35,7 @@ public class SitesIndexService {
         long startTime = System.currentTimeMillis();
         int coresCount = Runtime.getRuntime().availableProcessors();
         int threadsCount = Math.min(coresCount, indexingSettings.getSites().size());
-        poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsCount);
+        ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsCount);
         CountDownLatch cdLatch = new CountDownLatch(threadsCount);
 
         for (Site site : indexingSettings.getSites()) {
@@ -52,7 +45,6 @@ public class SitesIndexService {
                 SiteEntity siteEntity = new SiteEntity(SiteStatus.INDEXING, null, site.getUrl(), site.getName());
                 siteService.save(siteEntity);
                 IndexResultMessage indexResultMsg = parseSite(siteEntity);
-//                if (stopIndexingFlag) { Thread.currentThread().interrupt(); }
                 if (indexResultMsg == IndexResultMessage.INDEXING_IS_COMPLETED) {
                     siteService.changeSiteStatusByUrl(siteEntity.getUrl(), SiteStatus.INDEXED, null);
                 } else {

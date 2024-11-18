@@ -44,11 +44,6 @@ public abstract class AbstractCRUDService<T, ID> implements CRUDService<T, ID> {
         repository.saveAll(entities);
     }
 
-//    @Override
-//    public T update(T entity) {
-//        return save(entity);
-//    }
-
     @Override
     public void deleteById(ID id) {
         log.info("Delete row with id: {} from DB", id);

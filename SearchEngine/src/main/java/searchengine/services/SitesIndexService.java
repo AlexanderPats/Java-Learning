@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.stereotype.Service;
 import searchengine.config.IndexingSettings;
 import searchengine.config.Site;
+import searchengine.controllers.ApiController;
 import searchengine.model.SiteEntity;
 import searchengine.model.SiteStatus;
 
@@ -68,23 +69,11 @@ public class SitesIndexService {
         }
         fjpList.forEach(ForkJoinPool::shutdown);
         poolExecutor.shutdown();
+        ApiController.setIndexingIsRunning(false);
         System.out.println("Индексация завершена." + System.lineSeparator() +
                 "Затраченное время: " + (System.currentTimeMillis() - startTime)/1000 + " с");
 
     }
-
-//        indexingSettings.getSites().parallelStream().forEach(site -> {
-//            siteService.deleteByUrl(site.getUrl());
-//            SiteEntity siteEntity = new SiteEntity(SiteStatus.INDEXING, null, site.getUrl(), site.getName());
-//            siteService.save(siteEntity);
-//            IndexResultMessage indexResultMsg = parseSite(siteEntity);
-//            if (indexResultMsg == IndexResultMessage.INDEXING_IS_COMPLETED) {
-//                siteService.changeSiteStatusByUrl(siteEntity.getUrl(), SiteStatus.INDEXED, null);
-//            } else {
-//                siteService.changeSiteStatusByUrl(siteEntity.getUrl(), SiteStatus.FAILED, indexResultMsg.toString());
-//            }
-//        });
-
 
     public void stopSiteIndexing() {
         log.info("Sites indexing is interrupted by user!");

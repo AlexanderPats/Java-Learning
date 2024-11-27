@@ -13,6 +13,8 @@ import searchengine.model.SiteEntity;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.RecursiveTask;
 
 @Slf4j
@@ -31,22 +33,24 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
 //    private static final String[] TEXT_FILE_EXTENSIONS = {".htm", ".html", ".php", ".jsp", ".txt", ".xml"};
 
     @Setter
-    private static boolean stoppingIndexing = false;
+    private static volatile boolean stoppingIndexing = false;
+    private static Map<String, Set<String>> visitedPages;
 
     private final SiteEntity siteEntity;
-    private final String url;
+    private final String path;
     private final IndexingSettings indexingSettings;
     private String referrer;
     private final PageCRUDService pageService;
 
     public SiteParsing(
             SiteEntity siteEntity,
-            String url,
+            String path,
             IndexingSettings indexingSettings,
             String referrer,
-            PageCRUDService pageService) {
+            PageCRUDService pageService
+    ) {
         this.siteEntity = siteEntity;
-        this.url = url;
+        this.path = path;
         this.indexingSettings = indexingSettings;
         this.referrer = referrer;
         this.pageService = pageService;
@@ -57,7 +61,9 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
 
         if (stoppingIndexing) { return IndexResultMessage.INDEXING_IS_CANCELED; }
 
-        Document htmlDoc = getHtmlDocument(url,indexingSettings);
+        String pageUrl = siteEntity.getUrl() + path;
+        Document htmlDoc = getHtmlDocument(pageUrl, indexingSettings);
+
         if (htmlDoc == null) { return IndexResultMessage.SITE_IS_UNAVAILABLE; }
 
         int responseCode = htmlDoc.connection().response().statusCode();
@@ -65,51 +71,50 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
 
         if (!hasAcceptedContent(htmlDoc)) { return IndexResultMessage.SITE_HAS_NO_CONTENT; }
 
+        if (pageService.getBySiteAndPath(siteEntity, path) == null) {
+            Page page = new Page(siteEntity, path, responseCode, htmlDoc.toString());
+            try { pageService.save(page); }
+            catch (Exception e) {
+                log.warn("Ошибка при сохранении страницы в БД: {}", e.toString());
+                e.printStackTrace();}
+        }
+
         List<SiteParsing> taskList = new LinkedList<>();
 
-        String mainPageUrl = siteEntity.getUrl();
-        String htmlElementPattern = "a[href^=" + mainPageUrl + "],[href^=/]";
+        String siteUrl = siteEntity.getUrl();
+        String htmlElementPattern = "a[href^=" + siteUrl + "],[href^=/]";
         Elements htmlElements = htmlDoc.select(htmlElementPattern);
 
         for (Element element : htmlElements) {
             if (stoppingIndexing) { break; }
 
-            String path = element.attr("href");
-            if ( path.startsWith("//") ) { continue; }
-            if ( path.length() > indexingSettings.getPathMaxLength()) { continue; }
+            String elementPath = element.attr("href");
+            if ( elementPath.startsWith("//") ) { continue; }
+            if ( elementPath.length() > indexingSettings.getPathMaxLength()) { continue; }
+            if ( elementPath.equals(siteUrl) || elementPath.equals("/") ) { continue; }
+            if ( elementPath.equals(path) || elementPath.equals(siteUrl.concat(path)) ) { continue; }
 
-            if ( path.equals(mainPageUrl) ) { path = "/"; }
-            if ( path.startsWith(mainPageUrl) ) { path = path.substring(mainPageUrl.length()); }
-            if ( path.indexOf('#') >= 0 ) { path = path.substring(0, path.indexOf('#')); }
+            if ( elementPath.startsWith(siteUrl) ) { elementPath = elementPath.substring(siteUrl.length()); }
+            if ( elementPath.indexOf('#') >= 0 ) { elementPath = elementPath.substring(0, elementPath.indexOf('#')); }
 
-            String pathWoParams = path;
-            if (path.indexOf('?') >= 0) { pathWoParams = path.substring(0, path.indexOf('?')); }
-            if (indexingSettings.isExcludeUrlParameters()) { path = pathWoParams; }
+            String pathWoParams = elementPath;
+            if (elementPath.indexOf('?') >= 0) { pathWoParams = elementPath.substring(0, elementPath.indexOf('?')); }
+            if (indexingSettings.isExcludeUrlParameters()) { elementPath = pathWoParams; }
             if (isRejectedPath(pathWoParams)) { continue; }
 
-            if (pageService.getBySiteAndPath(siteEntity, path) != null) { continue; }
+            if (pageService.getBySiteAndPath(siteEntity, elementPath) != null) { continue; }
 
-            Page page = new Page(siteEntity, path, responseCode, htmlDoc.toString());
-            try { pageService.save(page); }
-            catch (Exception e) {e.printStackTrace();}
-
-            referrer = url.equals(mainPageUrl) ? url.concat("/") : url;
-
-            SiteParsing task = new SiteParsing(siteEntity, mainPageUrl + path, indexingSettings, referrer, pageService);
-            try { Thread.sleep(indexingSettings.getRequestTimeout()); }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-                log.warn("Метод Thread.sleep({}) вызвал исключение: {}",
-                        Thread.currentThread().getName(), e.getMessage());
-            }
-            task.fork();
+            referrer = pageUrl;
+            SiteParsing task = new SiteParsing(siteEntity, elementPath, indexingSettings, referrer, pageService);
             taskList.add(task);
+            task.fork();
+            task.join();
         }
 
-        for (SiteParsing task : taskList) {
-            if (stoppingIndexing) { task.cancel(true); }
-            else { task.join(); }
-        }
+//        for (SiteParsing task : taskList) {
+//            if (stoppingIndexing) { task.cancel(true); }
+//            else { task.join(); }
+//        }
 
         if (stoppingIndexing) { return IndexResultMessage.INDEXING_IS_CANCELED; }
         else { return IndexResultMessage.INDEXING_IS_COMPLETED; }
@@ -118,6 +123,13 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
 
 
     private Document getHtmlDocument(String url, IndexingSettings indexingSettings) {
+        try {
+            Thread.sleep(indexingSettings.getRequestTimeout());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            log.warn("Метод Thread.sleep() для процесса {} вызвал исключение: {}",
+                    Thread.currentThread().getName(), e.toString());
+        }
         Document htmlDoc = null;
         try {
             htmlDoc = Jsoup.
@@ -127,7 +139,7 @@ public class SiteParsing extends RecursiveTask<IndexResultMessage> {
                     get();
         } catch (IOException e) {
             e.printStackTrace();
-            log.warn("Ошибка при открытии сайта {}: {}", url, e.getMessage());
+            log.warn("Ошибка при открытии сайта {}: {}", url, e.toString());
         }
         return htmlDoc;
     }

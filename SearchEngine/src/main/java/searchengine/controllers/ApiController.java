@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.indexing.ErrMessage;
 import searchengine.dto.indexing.IndexingResponse;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.SitesIndexService;
+import searchengine.services.SitesIndexServiceImpl;
 import searchengine.services.StatisticsService;
 
 @RestController
@@ -18,7 +18,7 @@ import searchengine.services.StatisticsService;
 public class ApiController {
 
     private final StatisticsService statisticsService;
-    private final SitesIndexService sitesIndexService;
+    private final SitesIndexServiceImpl sitesIndexService;
 
     @Setter
     private static boolean indexingIsRunning = false;

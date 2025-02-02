@@ -95,6 +95,8 @@ public class ApiController {
                                                      @RequestParam String query,
                                                      @RequestParam(required = false) Integer offset,
                                                      @RequestParam(required = false) Integer limit ) {
+        if (site == null) { log.debug("Получен поисковый запрос по всем сайтам: '{}'", query); }
+        else  { log.debug("Получен поисковый запрос по сайту {}: '{}'", site, query); }
         SearchResponse searchResponse = searchService.search(site, query, offset, limit);
         return new ResponseEntity<>(searchResponse, searchResponse.getHttpStatus());
     }
@@ -105,7 +107,7 @@ public class ApiController {
             sitesIndexService.stopSitesIndexing();
             indexSitesThread.interrupt();
         }
-        log.warn(ResultMessage.SERVICE_WAS_STOPPED_BY_USER.toString());
+        log.warn("Работа сервиса прекращена пользователем");
         System.exit(0);
     }
 

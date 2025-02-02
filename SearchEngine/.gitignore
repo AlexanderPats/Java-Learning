@@ -4,7 +4,7 @@ target/
 ./application.yaml
 !**/src/main/**/target/
 !**/src/test/**/target/
-/src\main\java\searchengine\TestLuceneMorphology.java
+/src/main/java/searchengine/TestLuceneMorphology.java
 
 ### STS ###
 .apt_generated

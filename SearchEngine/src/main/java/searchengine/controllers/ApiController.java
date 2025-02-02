@@ -103,6 +103,7 @@ public class ApiController {
 
     @GetMapping("/stopService")
     public void stopService() {
+        log.info("Получен запрос на остановку сервиса");
         if (indexingIsRunning) {
             sitesIndexService.stopSitesIndexing();
             indexSitesThread.interrupt();

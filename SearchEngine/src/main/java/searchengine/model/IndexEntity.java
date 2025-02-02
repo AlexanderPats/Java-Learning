@@ -6,11 +6,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "`index`")
+@Table( name = "`index`",
+        indexes = @jakarta.persistence.Index(
+            name = "Idx__index__page_id__lemma",
+            columnList = "page_id, lemma_id",
+            unique = true)
+)
 @Getter
 @Setter
 @NoArgsConstructor
-public class Index {
+public class IndexEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,13 +23,18 @@ public class Index {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "page_id", nullable = false, foreignKey = @ForeignKey(name="FK_index_page"))
-    private Page page;
+    private PageEntity pageEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lemma_id", nullable = false, foreignKey = @ForeignKey(name="FK_index_lemma"))
-    private Lemma lemma;
+    private LemmaEntity lemmaEntity;
 
     @Column(name = "`rank`", columnDefinition = "float", nullable = false)
-    private Float rank;
+    private Integer rank;
 
+    public IndexEntity(PageEntity pageEntity, LemmaEntity lemmaEntity, Integer rank) {
+        this.pageEntity = pageEntity;
+        this.lemmaEntity = lemmaEntity;
+        this.rank = rank;
+    }
 }

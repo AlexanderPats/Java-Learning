@@ -9,11 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "lemma")
+@Table( name = "lemma",
+        indexes = @jakarta.persistence.Index(
+            name = "Idx__lemma__site_id__lemma",
+            columnList = "site_id, lemma",
+            unique = true)
+)
 @Getter
 @Setter
 @NoArgsConstructor
-public class Lemma {
+public class LemmaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +34,13 @@ public class Lemma {
     @Column(nullable = false)
     private Integer frequency;
 
-    @OneToMany(mappedBy = "lemma", cascade = CascadeType.REMOVE)
-    private List<Index> indexes = new ArrayList<>();
+    @OneToMany(mappedBy = "lemmaEntity", cascade = CascadeType.REMOVE)
+    private List<IndexEntity> indexEntities = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return siteEntity.getUrl().concat(": ").concat(lemma);
+    }
 
 }
+

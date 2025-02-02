@@ -1,5 +1,6 @@
 package searchengine.config;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,15 +8,11 @@ import java.util.Objects;
 
 @Setter
 @Getter
+@AllArgsConstructor
 public class Site {
 
     private String url;
     private String name;
-
-    public void setUrl(String url) {
-        url = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
-        this.url = url;
-    }
 
     @Override
     public boolean equals(Object o) {

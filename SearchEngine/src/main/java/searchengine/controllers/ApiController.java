@@ -1,39 +1,62 @@
 package searchengine.controllers;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import searchengine.dto.indexing.ErrMessage;
+import org.springframework.web.bind.annotation.*;
+import searchengine.config.IndexingSettings;
 import searchengine.dto.indexing.IndexingResponse;
+import searchengine.dto.search.SearchResponse;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.services.SitesIndexServiceImpl;
-import searchengine.services.StatisticsService;
+import searchengine.services.ResultMessage;
+import searchengine.services.indexing.SitesIndexService;
+import searchengine.services.search.SearchService;
+import searchengine.services.statistics.StatisticsService;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
 public class ApiController {
 
     private final StatisticsService statisticsService;
-    private final SitesIndexServiceImpl sitesIndexService;
+    private final SitesIndexService sitesIndexService;
+    private final SearchService searchService;
+    private final IndexingSettings indexingSettings;
 
+    @Getter
     @Setter
-    private static boolean indexingIsRunning = false;
+    private static volatile boolean indexingIsRunning = false;
 
     private Thread indexSitesThread;
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
-        return ResponseEntity.ok(statisticsService.getStatistics());
+        log.info("Получен запрос статистики индексации сайтов");
+        ResponseEntity<StatisticsResponse> responseEntity;
+        StatisticsResponse response = statisticsService.getStatistics();
+        if (response.isResult()) { responseEntity = ResponseEntity.ok(response); }
+        else { responseEntity = new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR); }
+        return responseEntity;
     }
 
     @GetMapping("/startIndexing")
     public ResponseEntity<IndexingResponse> startIndexing() {
+        log.info("Получен запрос на индексацию сайтов");
         if (indexingIsRunning) {
-            return ResponseEntity.ok(new IndexingResponse(false, ErrMessage.INDEXING_ALREADY_STARTED.toString()));
+            log.warn(ResultMessage.INDEXING_ALREADY_STARTED.toString());
+            IndexingResponse response =
+                    new IndexingResponse(false, ResultMessage.INDEXING_ALREADY_STARTED.toString());
+            return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
+        }
+        if (indexingSettings.getSites().isEmpty()) {
+            log.warn(ResultMessage.EMPTY_SITES_LIST.toString());
+            IndexingResponse response =
+                    new IndexingResponse(false, ResultMessage.EMPTY_SITES_LIST.toString());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
         indexingIsRunning = true;
         indexSitesThread = new Thread(sitesIndexService::startSitesIndexing);
@@ -43,13 +66,47 @@ public class ApiController {
 
     @GetMapping("/stopIndexing")
     public ResponseEntity<IndexingResponse> stopIndexing() {
+        log.info("Получен запрос на остановку индексации сайтов");
         if (!indexingIsRunning) {
-            return ResponseEntity.ok(new IndexingResponse(false, ErrMessage.INDEXING_NOT_STARTED.toString()));
+            log.warn(ResultMessage.INDEXING_NOT_STARTED.toString());
+            IndexingResponse response =
+                    new IndexingResponse(false, ResultMessage.INDEXING_NOT_STARTED.toString());
+            return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
         }
-        sitesIndexService.stopSiteIndexing();
+        sitesIndexService.stopSitesIndexing();
         indexingIsRunning = false;
         indexSitesThread.interrupt();
         return ResponseEntity.ok(new IndexingResponse(true, null));
+    }
+
+    @PostMapping("/indexPage")
+    public ResponseEntity<IndexingResponse> indexPage(@RequestParam String url) {
+        log.info("Получен запрос на индексацию страницы '{}'", url);
+        ResultMessage resultMsg = sitesIndexService.indexSinglePage(url);
+        if ( resultMsg == ResultMessage.INDEXING_IS_COMPLETED ) {
+            return ResponseEntity.ok( new IndexingResponse(true, null) );
+        } else {
+            return new ResponseEntity<>(new IndexingResponse(false, resultMsg.toString()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<SearchResponse> search(@RequestParam(required = false) String site,
+                                                     @RequestParam String query,
+                                                     @RequestParam(required = false) Integer offset,
+                                                     @RequestParam(required = false) Integer limit ) {
+        SearchResponse searchResponse = searchService.search(site, query, offset, limit);
+        return new ResponseEntity<>(searchResponse, searchResponse.getHttpStatus());
+    }
+
+    @GetMapping("/stopService")
+    public void stopService() {
+        if (indexingIsRunning) {
+            sitesIndexService.stopSitesIndexing();
+            indexSitesThread.interrupt();
+        }
+        log.warn(ResultMessage.SERVICE_WAS_STOPPED_BY_USER.toString());
+        System.exit(0);
     }
 
 }

@@ -35,7 +35,7 @@ public class ApiController {
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
-        log.info("Получен запрос статистики индексации сайтов");
+        log.debug("Получен запрос статистики индексации сайтов");
         ResponseEntity<StatisticsResponse> responseEntity;
         StatisticsResponse response = statisticsService.getStatistics();
         if (response.isResult()) { responseEntity = ResponseEntity.ok(response); }

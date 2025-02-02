@@ -41,10 +41,10 @@ public class SiteEntity {
 
     @Cascade(org.hibernate.annotations.CascadeType.REMOVE)
     @OneToMany(mappedBy = "siteEntity", cascade = CascadeType.REMOVE)
-    private Set<Page> pages = new HashSet<>();
+    private Set<PageEntity> pageEntities = new HashSet<>();
 
     @OneToMany(mappedBy = "siteEntity", cascade = CascadeType.REMOVE)
-    private Set<Lemma> lemmas = new HashSet<>();
+    private Set<LemmaEntity> lemmaEntities = new HashSet<>();
 
     public SiteEntity(SiteStatus status, String lastError, String url, String name) {
         this.status = status;
@@ -61,8 +61,6 @@ public class SiteEntity {
                 "statusTime=" + statusTime + System.lineSeparator() +
                 "lastError='" + lastError + '\'' + System.lineSeparator() +
                 "url='" + url + '\'' + System.lineSeparator() +
-                "name='" + name + '\'' + System.lineSeparator() +
-                "pages=" + pages + System.lineSeparator() +
-                "lemmas=" + lemmas + System.lineSeparator();
+                "name='" + name + '\'';
     }
 }

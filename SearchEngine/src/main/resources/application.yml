@@ -12,16 +12,14 @@ spring:
       allowPublicKeyRetrieval=true&
       createDatabaseIfNotExist=true
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: none
-#        connection:
-#        dialect: org.hibernate.dialect.MySQLDialect
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yml
     enabled: true
-    drop-first: true
+    drop-first: false
 
 logging:
   file:
@@ -39,28 +37,37 @@ logging:
 
 indexing-settings:
   exclude-url-parameters: true # default value: true
-  path-max-length: 767 # length of path without main url. MAX allowed value is 767
+  path-max-length: 767 # length of path without main url. MAX allowed value is 767. Default value: 767
   user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0 # default value: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0
   referrer: https://www.yandex.ru/ # default value: https://www.yandex.ru/
-  request-timeout: 100 # default value: 1000
+  request-timeout: 500 # default value: 500
+  check-visited-pages-algorithm: 0 # 0 - check with crating additional Set (advanced performance), 1 - check with request to DB (requires less RAM), other values are equals 1. Default value: 0
   sites:
     - url: http://affix.ru
       name: Affix
-    - url: https://natribu.org/
-      name: nahuy
+    - url: https://sendel.ru/
+      name: Sendel.ru
     - url: https://www.fc-baltika.ru
-      name: Baltika
+      name: Baltika Kaliningrad
     - url: https://www.fc-baltika.ru/
       name: BALTIKA
-    - url: https://www.fc-baltika.su/
+    - url: https://www.FC-baltika.su
       name: Baltika.su
-#    - url: https://www.lenta.ru
-#      name: Лента.ру
-    - url: https://www.skillbox.ru
-      name: Skillbox
-#    - url: https://www.skillbox.ru
+#    - url: http://www.SKILLBOX.ru
+#      name: Skillbox
+#    - url: https://www.Skillbox.ru
 #      name: Skillbox
 #    - url: https://www.playback.ru
 #      name: PlayBack.Ru
-#    - url: https://www.playback.ru
-#      name: PlayBack.Ru
+#    - url: https://www.lenta.ru
+#      name: Лента.ру
+#    - url: https://www.coxo.ru/
+#      name: Coxo
+#    - url: https://www.baltmaximus.com/
+#      name: Baltmaximus
+#    - url: http://www.balticstyle.ru/
+#      name: Baltik Style
+#    - url: https://www.splav.ru
+#      name: Splav.ru
+#    - url: https://klgtu.ru/
+#      name: KGTU

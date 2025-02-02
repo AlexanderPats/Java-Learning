@@ -10,17 +10,20 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table( name = "page", indexes = @jakarta.persistence.Index(
-        name = "Idx__page__site_id__path",
-        columnList = "site_id, path",
-        unique = true)
+@Table( name = "page",
+        indexes = @jakarta.persistence.Index(
+            name = "Idx__page__site_id__path",
+            columnList = "site_id, path",
+            unique = true)
 )
 @Getter
 @Setter
 @NoArgsConstructor
-public class Page implements Comparable<Page> {
+public class PageEntity implements Comparable<PageEntity> {
 
-    // 767 - максимальное значение в MYSQL8 с кодировкой utf8mb4 для работы составного индекса (site_id, path)
+    // 768 - максимальное значение в MYSQL8 с кодировкой utf8mb4 для работы индекса.
+    // Т.к. индекс составной (site_id, path), то MAX(path) = 768 - (size of site_id) = 767
+    // Данное поле не учитывается при использовании Liquibase
     @Transient
     public static final int MAX_PATH_LENGTH = 767;
 
@@ -41,10 +44,10 @@ public class Page implements Comparable<Page> {
     @Column(columnDefinition = "mediumtext", nullable = false)
     private String content;
 
-    @OneToMany(mappedBy = "page", cascade = CascadeType.REMOVE)
-    private List<Index> indexes = new ArrayList<>();
+    @OneToMany(mappedBy = "pageEntity", cascade = CascadeType.REMOVE)
+    private List<IndexEntity> indexEntities = new ArrayList<>();
 
-    public Page(SiteEntity siteEntity, String path, Integer code, String content) {
+    public PageEntity(SiteEntity siteEntity, String path, Integer code, String content) {
         this.siteEntity = siteEntity;
         this.path = path;
         this.code = code;
@@ -52,9 +55,9 @@ public class Page implements Comparable<Page> {
     }
 
     @Override
-    public int compareTo(Page p) {
-        String s1 = siteEntity.getUrl() + path;
-        String s2 = p.getSiteEntity().getUrl() + p.getPath();
+    public int compareTo(PageEntity p) {
+        String s1 = siteEntity.getUrl().concat(path);
+        String s2 = p.getSiteEntity().getUrl().concat( p.getPath() );
         return s1.compareToIgnoreCase(s2);
     }
 
@@ -62,9 +65,9 @@ public class Page implements Comparable<Page> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Page page = (Page) o;
-        return siteEntity.getUrl().equalsIgnoreCase( page.siteEntity.getUrl() ) &&
-                path.equalsIgnoreCase( page.path );
+        PageEntity pageEntity = (PageEntity) o;
+        return siteEntity.getUrl().equalsIgnoreCase( pageEntity.siteEntity.getUrl() ) &&
+                path.equalsIgnoreCase( pageEntity.path );
     }
 
     @Override

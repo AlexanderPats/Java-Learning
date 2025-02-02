@@ -15,7 +15,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: int
+                  type: INT
                   autoIncrement: true
                   constraints:
                     primaryKey: true
@@ -59,7 +59,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: int
+                  type: INT
                   autoIncrement: true
                   constraints:
                     primaryKey: true
@@ -76,7 +76,6 @@ databaseChangeLog:
                   type: VARCHAR(767)
                   constraints:
                     nullable: false
-                    fulltextKey:
               - column:
                   name: code
                   type: INT
@@ -107,7 +106,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: int
+                  type: INT
                   autoIncrement: true
                   constraints:
                     primaryKey: true
@@ -129,6 +128,10 @@ databaseChangeLog:
                   type: INT
                   constraints:
                     nullable: false
+        - addUniqueConstraint:
+            tableName: lemma
+            columnNames: site_id, lemma
+            constraintName: Idx__lemma__site_id__lemma
 
   - changeSet:
       id: 0.05
@@ -145,7 +148,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: int
+                  type: INT
                   autoIncrement: true
                   constraints:
                     primaryKey: true
@@ -167,8 +170,12 @@ databaseChangeLog:
                     deleteCascade: true
               - column:
                   name: rank
-                  type: FLOAT
+                  type: INT
                   constraints:
                     nullable: false
+        - addUniqueConstraint:
+            tableName: index
+            columnNames: page_id, lemma_id
+            constraintName: Idx__index__page_id__lemma_id
         - tagDatabase:
             tag: 0.02

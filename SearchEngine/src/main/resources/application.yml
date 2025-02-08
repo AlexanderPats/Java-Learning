@@ -43,16 +43,16 @@ indexing-settings:
   request-timeout: 500 # default value: 500
   check-visited-pages-algorithm: 0 # 0 - check with crating additional Set (advanced performance), 1 - check with request to DB (requires less RAM), other values are equals 1. Default value: 0
   sites:
-    - url: http://affix.ru
-      name: Affix
-    - url: https://sendel.ru/
-      name: Sendel.ru
-    - url: https://www.fc-baltika.ru
-      name: Baltika Kaliningrad
-    - url: https://www.fc-baltika.ru/
-      name: BALTIKA
-    - url: https://www.FC-baltika.su
-      name: Baltika.su
+#    - url: http://affix.ru
+#      name: Affix
+#    - url: https://sendel.ru/
+#      name: Sendel.ru
+#    - url: https://www.fc-baltika.ru
+#      name: Baltika Kaliningrad
+#    - url: https://www.fc-baltika.ru/
+#      name: BALTIKA
+#    - url: https://www.FC-baltika.su
+#      name: Baltika.su
 #    - url: http://www.SKILLBOX.ru
 #      name: Skillbox
 #    - url: https://www.Skillbox.ru
@@ -61,12 +61,12 @@ indexing-settings:
 #      name: PlayBack.Ru
 #    - url: https://www.lenta.ru
 #      name: Лента.ру
-#    - url: https://www.coxo.ru/
-#      name: Coxo
+    - url: https://www.coxo.ru/
+      name: Coxo
 #    - url: https://www.baltmaximus.com/
 #      name: Baltmaximus
-#    - url: http://www.balticstyle.ru/
-#      name: Baltik Style
+    - url: http://www.balticstyle.ru/
+      name: Baltik Style
 #    - url: https://www.splav.ru
 #      name: Splav.ru
 #    - url: https://klgtu.ru/

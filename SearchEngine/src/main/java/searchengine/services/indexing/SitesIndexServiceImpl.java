@@ -36,17 +36,22 @@ public class SitesIndexServiceImpl implements SitesIndexService {
         stopIndexingFlag = false;
         RecursivePageIndexing.setStoppingIndexing(false);
         int coresCount = Runtime.getRuntime().availableProcessors();
-        int threadsCount = Math.min(coresCount, indexingSettings.getSites().size());
+        int sitesCount = indexingSettings.getSites().size();
+        int threadsCount = Math.min(coresCount, sitesCount);
         poolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadsCount);
-        CountDownLatch cdLatch = new CountDownLatch(threadsCount);
+        CountDownLatch cdLatch = new CountDownLatch(sitesCount);
 
         for (Site site : indexingSettings.getSites()) {
-            if (stopIndexingFlag) { break; }
+            if (stopIndexingFlag) {
+                while (cdLatch.getCount() > 0) { cdLatch.countDown(); }
+                break;
+            }
             poolExecutor.execute( () -> {
                 indexSiteTask(site);
                 cdLatch.countDown();
             } );
         }
+
         try { cdLatch.await(); }
         catch (InterruptedException e) {
             log.warn("Метод cdLatch.await в экземпляре класса {} вызвал исключение: {}",

@@ -32,9 +32,9 @@ public class MorphologyServiceImpl implements MorphologyService {
 
     @Override
     public List<String> getLemmasFromText(String text) {
-        text = text.replace('ё', 'е');
+        text = text.toLowerCase().replace('ё', 'е');
         Pattern pattern = Pattern.compile(REGEX_RUS_WORDS);
-        Matcher matcher = pattern.matcher(text.toLowerCase());
+        Matcher matcher = pattern.matcher(text);
         List<String> resultList = new ArrayList<>();
         while (matcher.find()) {
             String currentWord = matcher.group();

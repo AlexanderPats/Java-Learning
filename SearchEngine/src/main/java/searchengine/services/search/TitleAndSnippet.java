@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public class TitleAndSnippet {
 
     final int MAX_SNIPPET_LENGTH = 160;
-    //  amount of word will be output before and after the lemma in the snippet
+    //  amount of words will be output before and after the lemma in the snippet
     final int WORDS_AMOUNT_BEFORE_AND_AFTER_LEMMA = 5;
 
     private final MorphologyService morphologyService;
@@ -133,7 +133,7 @@ public class TitleAndSnippet {
      * @return array of words from param 'text'. Search words in the array are surrounded by bold tags.
      */
     private String[] highlightSearchWordsArray(String text, Set<String> lemmas) {
-        final String RUS_WORLD_PATTERN = "[А-Яа-я]+";
+        final String RUS_WORLD_PATTERN = "[А-ЯЁа-яё]+";
         Pattern pattern = Pattern.compile(RUS_WORLD_PATTERN);
 
         // В тексте может приводиться пример HTML-кода (например, на страницах о WEB-программировании),

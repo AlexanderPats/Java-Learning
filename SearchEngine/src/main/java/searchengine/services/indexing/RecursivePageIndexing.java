@@ -211,7 +211,7 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
 
     private Element deleteFooter(Element htmlBody) {
         String s = htmlBody.toString();
-        s = s.replaceAll("<footer>[\\s\\S]+?</footer>", "<footer></footer>");
+        s = s.replaceAll("<footer[\\s\\S]+?</footer>", "<footer></footer>");
         return Jsoup.parse(s);
     }
 

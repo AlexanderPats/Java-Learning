@@ -39,11 +39,13 @@ public class SiteEntity {
     @Column(columnDefinition = "varchar(255)", nullable = false)
     private String name;
 
-    @Cascade(org.hibernate.annotations.CascadeType.REMOVE)
-    @OneToMany(mappedBy = "siteEntity", cascade = CascadeType.REMOVE)
+//    @Cascade(org.hibernate.annotations.CascadeType.REMOVE)
+//    @OneToMany(mappedBy = "siteEntity", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "siteEntity")
     private Set<PageEntity> pageEntities = new HashSet<>();
 
-    @OneToMany(mappedBy = "siteEntity", cascade = CascadeType.REMOVE)
+//    @OneToMany(mappedBy = "siteEntity", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "siteEntity")
     private Set<LemmaEntity> lemmaEntities = new HashSet<>();
 
     public SiteEntity(SiteStatus status, String lastError, String url, String name) {

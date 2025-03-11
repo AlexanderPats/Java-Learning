@@ -34,7 +34,8 @@ public class LemmaEntity {
     @Column(nullable = false)
     private Integer frequency;
 
-    @OneToMany(mappedBy = "lemmaEntity", cascade = CascadeType.REMOVE)
+//    @OneToMany(mappedBy = "lemmaEntity", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "lemmaEntity")
     private List<IndexEntity> indexEntities = new ArrayList<>();
 
     @Override

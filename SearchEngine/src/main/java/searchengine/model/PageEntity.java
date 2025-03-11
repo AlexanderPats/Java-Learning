@@ -44,7 +44,8 @@ public class PageEntity implements Comparable<PageEntity> {
     @Column(columnDefinition = "mediumtext", nullable = false)
     private String content;
 
-    @OneToMany(mappedBy = "pageEntity", cascade = CascadeType.REMOVE)
+//    @OneToMany(mappedBy = "pageEntity", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "pageEntity")
     private List<IndexEntity> indexEntities = new ArrayList<>();
 
     public PageEntity(SiteEntity siteEntity, String path, Integer code, String content) {

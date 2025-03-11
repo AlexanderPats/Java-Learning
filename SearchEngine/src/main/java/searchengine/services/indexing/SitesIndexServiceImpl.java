@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.UnexpectedRollbackException;
 import searchengine.config.IndexingSettings;
 import searchengine.config.Site;
 import searchengine.controllers.ApiController;
@@ -131,8 +132,16 @@ public class SitesIndexServiceImpl implements SitesIndexService {
 
     private void indexSiteTask(Site site) {
         String siteUrl = site.getUrl();
+        while (true) {
+            try {
+                siteService.deleteByUrl(siteUrl);
+                break;
+            } catch (Exception e) { // ToDo Уточнить вид Exception, когда его поймаю
+                log.warn("Restart transaction: delete site, due to the error: {}", e.toString());
+            }
+        }
+//        siteService.deleteByUrl(siteUrl);
         log.info("Старт индексации для сайта: {}", siteUrl);
-        siteService.deleteByUrl(siteUrl);
         SiteEntity siteEntity = new SiteEntity(SiteStatus.INDEXING, null, siteUrl, site.getName());
         siteService.save(siteEntity);
 

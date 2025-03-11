@@ -44,10 +44,11 @@ public class PageCRUDService implements CRUDService<PageEntity, Integer> {
 
     @Override
     public PageEntity save(PageEntity pageEntity) {
-        String pageUrl = pageEntity.getSiteEntity().getUrl().concat( pageEntity.getPath() );
+        String pageUrl = pageEntity.getSiteEntity().getUrl().concat(pageEntity.getPath());
         log.info("Saving page '{}' to table '{}'", pageUrl, tableName);
-        try { pageRepository.save(pageEntity); }
-        catch (Exception e) {
+        try {
+            pageRepository.save(pageEntity);
+        } catch (Exception e) {
             log.warn("Error while saving pageEntity '{}' to table '{}': {}", pageUrl, tableName, e.toString());
         }
         return pageEntity;

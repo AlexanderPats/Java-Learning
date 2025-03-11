@@ -26,8 +26,9 @@ public class TitleAndSnippet {
 
     String getPageTitle(Document htmlDoc, Set<String> lemmas) {
         String title = htmlDoc.head().tagName("title").text();
-        if ( title.isEmpty() ) { title =  ResultMessage.NO_TITLE.toString(); }
-        else {
+        if (title.isEmpty()) {
+            title = ResultMessage.NO_TITLE.toString();
+        } else {
             String[] titleWords = highlightSearchWordsArray(title, lemmas);
             StringBuilder titleBuilder = new StringBuilder();
             for (String titleWord : titleWords) {
@@ -47,7 +48,9 @@ public class TitleAndSnippet {
                 replaceAll("<footer[\\s\\S]+?</footer>", "<footer></footer>");
         Element htmlBodyWoHeadersAndFooters = Jsoup.parse(s);
         String snippet = getSnippetForElement(htmlBodyWoHeadersAndFooters, lemmas);
-        if (snippet == null) { snippet = getSnippetForElement(htmlBody, lemmas); }
+        if (snippet == null) {
+            snippet = getSnippetForElement(htmlBody, lemmas);
+        }
         return snippet;
     }
 
@@ -61,11 +64,14 @@ public class TitleAndSnippet {
 
             TreeMap<String, Set<String>> elementSnippet = getSnippetWithFoundLemmas(words);
             if (elementSnippet != null) {
-                snippets.putIfAbsent( elementSnippet.firstEntry().getValue().size(), elementSnippet.firstKey() );
+                snippets.putIfAbsent(elementSnippet.firstEntry().getValue().size(), elementSnippet.firstKey());
             }
-        } );
-        if (snippets.isEmpty()) { return null; }
-        else { return snippets.lastEntry().getValue(); }
+        });
+        if (snippets.isEmpty()) {
+            return null;
+        } else {
+            return snippets.lastEntry().getValue();
+        }
     }
 
 
@@ -80,16 +86,22 @@ public class TitleAndSnippet {
         int lastIdx = -1;
 
         for (int i = 0; i < words.length; i++) {
-            if (snippetBuilder.length() >= MAX_SNIPPET_LENGTH) { break; }
+            if (snippetBuilder.length() >= MAX_SNIPPET_LENGTH) {
+                break;
+            }
 
-            if (!words[i].contains("<b>")) { continue; }
+            if (!words[i].contains("<b>")) {
+                continue;
+            }
 
             String word = words[i].substring(words[i].indexOf("<b>") + 3, words[i].indexOf("</b>")).toLowerCase();
 
-            foundLemmas.add( morphologyService.getNormalForm(word) );
+            foundLemmas.add(morphologyService.getNormalForm(word));
 
             if (i - lastIdx > WORDS_AMOUNT_BEFORE_AND_AFTER_LEMMA + 1) {
-                if (lastIdx > -1) { snippetBuilder.append("... "); }
+                if (lastIdx > -1) {
+                    snippetBuilder.append("... ");
+                }
                 lastIdx = i - WORDS_AMOUNT_BEFORE_AND_AFTER_LEMMA;
             }
 
@@ -100,24 +112,28 @@ public class TitleAndSnippet {
             lastIdx = Math.min((i + WORDS_AMOUNT_BEFORE_AND_AFTER_LEMMA), words.length - 1);
 
             for (int j = i + 1; j <= lastIdx; j++) {
-                if (snippetBuilder.length() > MAX_SNIPPET_LENGTH) { break; }
+                if (snippetBuilder.length() > MAX_SNIPPET_LENGTH) {
+                    break;
+                }
                 snippetBuilder.append(words[j]).append(" ");
-                if ( words[j].startsWith("<b>") ) {
+                if (words[j].startsWith("<b>")) {
                     words[j] = words[j].substring(3, words[j].indexOf("</b>")).toLowerCase();
-                    foundLemmas.add( morphologyService.getNormalForm(words[j]) );
+                    foundLemmas.add(morphologyService.getNormalForm(words[j]));
                     lastIdx = Math.min((j + WORDS_AMOUNT_BEFORE_AND_AFTER_LEMMA), words.length - 1);
                 }
             }
             i = lastIdx;
         }
 
-        if (foundLemmas.isEmpty()) { return null;}
+        if (foundLemmas.isEmpty()) {
+            return null;
+        }
 
         snippetBuilder.setLength(snippetBuilder.length() - 1);
 
-        if ( ! (snippetBuilder.toString().endsWith(".") ||
+        if (!(snippetBuilder.toString().endsWith(".") ||
                 snippetBuilder.toString().endsWith("!") ||
-                snippetBuilder.toString().endsWith("?")) ) {
+                snippetBuilder.toString().endsWith("?"))) {
             snippetBuilder.append("...");
         }
 
@@ -128,7 +144,7 @@ public class TitleAndSnippet {
 
 
     /**
-     * @param text text from HTML-element.
+     * @param text   text from HTML-element.
      * @param lemmas set of lemmas of search words.
      * @return array of words from param 'text'. Search words in the array are surrounded by bold tags.
      */
@@ -146,7 +162,7 @@ public class TitleAndSnippet {
             if (matcher.find()) {
                 String word = matcher.group().toLowerCase().replace('ё', 'е');
                 String wordInNormalForm = morphologyService.getNormalForm(word);
-                if ( lemmas.contains(wordInNormalForm) ) {
+                if (lemmas.contains(wordInNormalForm)) {
                     words[i] = words[i].replace(matcher.group(), "<b>".concat(matcher.group()).concat("</b>"));
                 }
             }

@@ -34,7 +34,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             response.setResult(true);
         } catch (Exception e) {
             response.setResult(false);
-            log.warn("Метод getStatistics() вызвал исключение: {}", e.toString());            
+            log.warn("Метод getStatistics() вызвал исключение: {}", e.toString());
         }
         return response;
     }
@@ -58,7 +58,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<SiteEntity> sitesList = siteService.getAll();
 
-        sitesList.forEach( siteEntity -> {
+        sitesList.forEach(siteEntity -> {
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(siteEntity.getName());
             String siteUrl = siteEntity.getUrl();

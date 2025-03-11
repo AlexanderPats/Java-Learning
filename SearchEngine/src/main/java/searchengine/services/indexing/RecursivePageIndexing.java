@@ -35,9 +35,9 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
     /**
      * Конструктор для главной страницы
      */
-    public RecursivePageIndexing( PageIndexService pageIndexService,
-                                  SiteEntity siteEntity,
-                                  IndexingSettings indexingSettings ) {
+    public RecursivePageIndexing(PageIndexService pageIndexService,
+                                 SiteEntity siteEntity,
+                                 IndexingSettings indexingSettings) {
         RecursivePageIndexing.pageIndexService = pageIndexService;
         RecursivePageIndexing.indexingSettings = indexingSettings;
         userAgent = indexingSettings.getUserAgent();
@@ -54,11 +54,11 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
     /**
      * Конструктор для всех страниц, кроме главной
      */
-    public RecursivePageIndexing( SiteEntity siteEntity,
-                                  String path,
-                                  Element htmlBody,
-                                  Set<String> visitedPages,
-                                  LinkedList<Integer> requestTimeout) {
+    public RecursivePageIndexing(SiteEntity siteEntity,
+                                 String path,
+                                 Element htmlBody,
+                                 Set<String> visitedPages,
+                                 LinkedList<Integer> requestTimeout) {
         this.siteEntity = siteEntity;
         this.path = path;
         this.htmlBody = htmlBody;
@@ -71,15 +71,19 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
     @Override
     protected ResultMessage compute() {
 
-        if (stoppingIndexing) { return ResultMessage.INDEXING_IS_CANCELED; }
+        if (stoppingIndexing) {
+            return ResultMessage.INDEXING_IS_CANCELED;
+        }
 
         siteUrl = siteEntity.getUrl();
 
         if (isMainPage) {
-            Document htmlDoc = pageIndexService.getHtmlDocument( siteUrl, userAgent, referrer );
+            Document htmlDoc = pageIndexService.getHtmlDocument(siteUrl, userAgent, referrer);
 
             ResultMessage resultMessage = pageIndexService.checkHTMLDocument(htmlDoc);
-            if (resultMessage != ResultMessage.PAGE_IS_CHECKED) { return resultMessage; }
+            if (resultMessage != ResultMessage.PAGE_IS_CHECKED) {
+                return resultMessage;
+            }
 
             visitedPages.add(path);
             pageIndexService.indexAndSavePage(siteEntity, path, htmlDoc);
@@ -89,8 +93,11 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
 
         recursiveParseHtmlBody();
 
-        if (stoppingIndexing) { return ResultMessage.INDEXING_IS_CANCELED; }
-        else { return ResultMessage.INDEXING_IS_COMPLETED; }
+        if (stoppingIndexing) {
+            return ResultMessage.INDEXING_IS_CANCELED;
+        } else {
+            return ResultMessage.INDEXING_IS_COMPLETED;
+        }
     }
 
 
@@ -104,24 +111,37 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
         referrer = siteUrl.concat(path);
 
         for (Element element : htmlElements) {
-            if (stoppingIndexing) { break; }
+            if (stoppingIndexing) {
+                break;
+            }
 
             String elementPath = element.attr("href");
 
-            try { elementPath = pageIndexService.normalizePath(elementPath, siteUrl, indexingSettings); }
-            catch (RuntimeException e) { continue; }
-
-            if ( checkVisitedPagesAlgorithm == 0 && visitedPages.contains(elementPath) ) { continue; }
-            if ( checkVisitedPagesAlgorithm != 0 && (pageIndexService.pageIsPresentInDB(siteEntity, elementPath)) ) {
+            try {
+                elementPath = pageIndexService.normalizePath(elementPath, siteUrl, indexingSettings);
+            } catch (RuntimeException e) {
                 continue;
             }
-            if ( elementPath.concat("/").equals(path) || elementPath.equals(path.concat("/")) ) { continue; }
 
-            if (stoppingIndexing) { break; }
+            if (checkVisitedPagesAlgorithm == 0 && visitedPages.contains(elementPath)) {
+                continue;
+            }
+            if (checkVisitedPagesAlgorithm != 0 && (pageIndexService.pageIsPresentInDB(siteEntity, elementPath))) {
+                continue;
+            }
+            if (elementPath.concat("/").equals(path) || elementPath.equals(path.concat("/"))) {
+                continue;
+            }
+
+            if (stoppingIndexing) {
+                break;
+            }
 
             Document elementDoc = getHtmlDoc(elementPath);//
 
-            if (stoppingIndexing) { break; }
+            if (stoppingIndexing) {
+                break;
+            }
 
             if (pageIndexService.checkHTMLDocument(elementDoc) != ResultMessage.PAGE_IS_CHECKED) {
                 addToVisitedPageSet(elementPath);
@@ -137,13 +157,19 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
                 continue;
             }
 
-            if ( checkIsVisitedPage(elementPath, elementTruePath, checkVisitedPagesAlgorithm) ) { continue; }
+            if (checkIsVisitedPage(elementPath, elementTruePath, checkVisitedPagesAlgorithm)) {
+                continue;
+            }
 
-            if (stoppingIndexing) { break; }
+            if (stoppingIndexing) {
+                break;
+            }
 
             pageIndexService.indexAndSavePage(siteEntity, elementTruePath, elementDoc);
 
-            if (stoppingIndexing) { break; }
+            if (stoppingIndexing) {
+                break;
+            }
 
             /*
             Следующая строка убирает футеры для всех страниц, кроме главной.
@@ -162,8 +188,11 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
         }
 
         for (RecursivePageIndexing task : taskList) {
-            if (stoppingIndexing) { task.cancel(true); }
-            else { task.join(); }
+            if (stoppingIndexing) {
+                task.cancel(true);
+            } else {
+                task.join();
+            }
         }
     }
 
@@ -171,21 +200,22 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
     private Document getHtmlDoc(String elementPath) {
         synchronized (requestTimeout) { // что бы обеспечить паузу между запросами в многопоточном режиме
             if (requestTimeout.getFirst() > 0) {
-                try { Thread.sleep(requestTimeout.getFirst()); }
-                catch (InterruptedException e) {
+                try {
+                    Thread.sleep(requestTimeout.getFirst());
+                } catch (InterruptedException e) {
                     log.warn("Метод Thread.sleep() для процесса {} вызвал исключение: {}",
                             Thread.currentThread().getName(), e.toString());
                 }
             }
         }
-        return pageIndexService.getHtmlDocument( siteUrl.concat(elementPath), userAgent, referrer );
+        return pageIndexService.getHtmlDocument(siteUrl.concat(elementPath), userAgent, referrer);
     }
 
 
     private boolean checkIsVisitedPage(String elementPath, String elementTruePath, int checkAlgorithm) {
         if (checkAlgorithm == 0) {
             synchronized (visitedPages) {
-                if ( !visitedPages.add(elementTruePath) ) {
+                if (!visitedPages.add(elementTruePath)) {
                     visitedPages.add(elementPath);
                     return true;
                 }
@@ -193,7 +223,9 @@ public class RecursivePageIndexing extends RecursiveTask<ResultMessage> {
             }
         }
         if (checkAlgorithm != 0) {
-            if ( elementTruePath.equals(path) || elementTruePath.equals("/") ) { return  true; }
+            if (elementTruePath.equals(path) || elementTruePath.equals("/")) {
+                return true;
+            }
             return pageIndexService.pageIsPresentInDB(siteEntity, elementTruePath);
         }
         return false;

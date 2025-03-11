@@ -46,7 +46,9 @@ public class IndexingSettings {
         this.sites = new HashSet<>();
         for (Site site : sites) {
             String url = getResponseSiteUrl(site.getUrl());
-            if ( url.endsWith("/") ) { url = url.substring(0, url.length() - 1); }
+            if (url.endsWith("/")) {
+                url = url.substring(0, url.length() - 1);
+            }
             String name = site.getName();
             this.sites.add(new Site(url, name));
         }
@@ -54,9 +56,14 @@ public class IndexingSettings {
 
     public String getResponseSiteUrl(String url) {
         Document htmlDoc = null;
-        try { htmlDoc = Jsoup.connect(url).userAgent(userAgent).referrer(referrer).get(); }
-        catch (IOException e) { log.warn("Check site {} - Site is unavailable: {}", url, e.toString()); }
-        if (!(htmlDoc == null)) { url = htmlDoc.connection().response().url().toString(); }
+        try {
+            htmlDoc = Jsoup.connect(url).userAgent(userAgent).referrer(referrer).get();
+        } catch (IOException e) {
+            log.warn("Check site {} - Site is unavailable: {}", url, e.toString());
+        }
+        if (!(htmlDoc == null)) {
+            url = htmlDoc.connection().response().url().toString();
+        }
         return url.toLowerCase();
     }
 

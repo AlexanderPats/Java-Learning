@@ -33,12 +33,13 @@ public class IndexCRUDService implements CRUDService<IndexEntity, Integer> {
 
     @Override
     public IndexEntity save(IndexEntity indexEntity) {
-        int pageId =  indexEntity.getPageEntity().getId();
+        int pageId = indexEntity.getPageEntity().getId();
         int lemmaId = indexEntity.getLemmaEntity().getId();
         log.info("Saving index entity with page_id {} and lemma_id {} to table {}",
-               pageId,lemmaId, tableName);
-        try { indexRepository.save(indexEntity); }
-        catch (Exception e) {
+                pageId, lemmaId, tableName);
+        try {
+            indexRepository.save(indexEntity);
+        } catch (Exception e) {
             log.warn("Error while saving lemmaEntity with page_id {} and lemma_id {} to table {}: {}",
                     pageId, lemmaId, tableName, e.toString());
         }
@@ -51,8 +52,7 @@ public class IndexCRUDService implements CRUDService<IndexEntity, Integer> {
             try {
                 indexRepository.saveAll(indexEntities);
                 break;
-            }
-            catch (CannotAcquireLockException e) {
+            } catch (CannotAcquireLockException e) {
                 log.warn("Error while saving indexes to table {}: {}", tableName, e.toString());
                 log.warn("Restart transaction: save indexes due to the error: {}", e.toString());
             }

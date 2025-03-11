@@ -30,10 +30,12 @@ public class LemmaCRUDService implements CRUDService<LemmaEntity, Integer> {
         log.debug("Getting all lemmaEntities with site '{} and lemmas: {}' from table '{}'",
                 siteEntity.getUrl(), lemmas, tableName);
         List<LemmaEntity> lemmaEntities = new ArrayList<>();
-        lemmas.forEach( lemma -> {
+        lemmas.forEach(lemma -> {
             LemmaEntity lemmaEntity = lemmaRepository.findBySiteEntityAndLemma(siteEntity, lemma);
-            if (lemmaEntity != null) { lemmaEntities.add(lemmaEntity); }
-        } );
+            if (lemmaEntity != null) {
+                lemmaEntities.add(lemmaEntity);
+            }
+        });
         return lemmaEntities;
     }
 
@@ -45,10 +47,12 @@ public class LemmaCRUDService implements CRUDService<LemmaEntity, Integer> {
         log.debug("Getting to map all lemmaEntities with site '{} and lemmas: {}' from table '{}'",
                 siteEntity.getUrl(), lemmas, tableName);
         Map<String, LemmaEntity> lemmaEntities = new HashMap<>();
-        lemmas.forEach( lemma -> {
+        lemmas.forEach(lemma -> {
             LemmaEntity lemmaEntity = lemmaRepository.findBySiteEntityAndLemma(siteEntity, lemma);
-            if (lemmaEntity != null) { lemmaEntities.put(lemma, lemmaEntity); }
-        } );
+            if (lemmaEntity != null) {
+                lemmaEntities.put(lemma, lemmaEntity);
+            }
+        });
         return lemmaEntities;
     }
 
@@ -67,8 +71,9 @@ public class LemmaCRUDService implements CRUDService<LemmaEntity, Integer> {
         String siteUrl = lemmaEntity.getSiteEntity().getUrl();
         String lemmaWord = lemmaEntity.getLemma();
         log.info("Saving lemma '{}: {}' to table '{}'", siteUrl, lemmaWord, tableName);
-        try { lemmaRepository.save(lemmaEntity); }
-        catch (Exception e) {
+        try {
+            lemmaRepository.save(lemmaEntity);
+        } catch (Exception e) {
             log.warn("Error while saving lemmaEntity '{}: {}' to table '{}': {}",
                     siteUrl, lemmaWord, tableName, e.toString());
         }
@@ -78,8 +83,9 @@ public class LemmaCRUDService implements CRUDService<LemmaEntity, Integer> {
     @Transactional
     public void saveOrUpdateLemmas(Integer siteId, Iterable<String> lemmas) {
         log.info("Saving lemmas: '{}' to table '{}'", lemmas, tableName);
-        try { lemmas.forEach( lemma -> lemmaRepository.saveOrUpdate(siteId, lemma) ); }
-        catch (Exception e) {
+        try {
+            lemmas.forEach(lemma -> lemmaRepository.saveOrUpdate(siteId, lemma));
+        } catch (Exception e) {
             log.warn("Error while saving lemmas '{}' to table '{}': {}", lemmas, tableName, e.toString());
         }
     }
@@ -91,9 +97,8 @@ public class LemmaCRUDService implements CRUDService<LemmaEntity, Integer> {
     public void decreaseLemmasFrequenciesByOne(SiteEntity siteEntity, Set<String> lemmas) {
         log.info("Decreasing counters by 1 for lemmas: '{}' in table '{}'", lemmas, tableName);
         try {
-            lemmas.forEach(lemma -> lemmaRepository.decreaseFrequencyByOne(siteEntity, lemma) );
-        }
-        catch (Exception e) {
+            lemmas.forEach(lemma -> lemmaRepository.decreaseFrequencyByOne(siteEntity, lemma));
+        } catch (Exception e) {
             log.warn("Error while decreasing counters for lemmas: '{}' to table '{}': {}",
                     lemmas, tableName, e.toString());
         }

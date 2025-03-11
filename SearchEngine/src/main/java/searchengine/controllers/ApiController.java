@@ -38,8 +38,11 @@ public class ApiController {
         log.debug("Получен запрос статистики индексации сайтов");
         ResponseEntity<StatisticsResponse> responseEntity;
         StatisticsResponse response = statisticsService.getStatistics();
-        if (response.isResult()) { responseEntity = ResponseEntity.ok(response); }
-        else { responseEntity = new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR); }
+        if (response.isResult()) {
+            responseEntity = ResponseEntity.ok(response);
+        } else {
+            responseEntity = new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         return responseEntity;
     }
 
@@ -83,8 +86,8 @@ public class ApiController {
     public ResponseEntity<IndexingResponse> indexPage(@RequestParam String url) {
         log.info("Получен запрос на индексацию страницы '{}'", url);
         ResultMessage resultMsg = sitesIndexService.indexSinglePage(url);
-        if ( resultMsg == ResultMessage.INDEXING_IS_COMPLETED ) {
-            return ResponseEntity.ok( new IndexingResponse(true, null) );
+        if (resultMsg == ResultMessage.INDEXING_IS_COMPLETED) {
+            return ResponseEntity.ok(new IndexingResponse(true, null));
         } else {
             return new ResponseEntity<>(new IndexingResponse(false, resultMsg.toString()), HttpStatus.BAD_REQUEST);
         }
@@ -92,11 +95,14 @@ public class ApiController {
 
     @GetMapping("/search")
     public ResponseEntity<SearchResponse> search(@RequestParam(required = false) String site,
-                                                     @RequestParam String query,
-                                                     @RequestParam(required = false) Integer offset,
-                                                     @RequestParam(required = false) Integer limit ) {
-        if (site == null) { log.debug("Получен поисковый запрос по всем сайтам: '{}'", query); }
-        else  { log.debug("Получен поисковый запрос по сайту {}: '{}'", site, query); }
+                                                 @RequestParam String query,
+                                                 @RequestParam(required = false) Integer offset,
+                                                 @RequestParam(required = false) Integer limit) {
+        if (site == null) {
+            log.debug("Получен поисковый запрос по всем сайтам: '{}'", query);
+        } else {
+            log.debug("Получен поисковый запрос по сайту {}: '{}'", site, query);
+        }
         SearchResponse searchResponse = searchService.search(site, query, offset, limit);
         return new ResponseEntity<>(searchResponse, searchResponse.getHttpStatus());
     }

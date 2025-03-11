@@ -26,7 +26,7 @@ public class MorphologyServiceImpl implements MorphologyService {
     public Map<String, Integer> getMapOfLemmasMentions(String text) {
         List<String> lemmas = getLemmasFromText(text);
         HashMap<String, Integer> resultMap = new HashMap<>();
-        lemmas.forEach( lemma -> resultMap.put(lemma, resultMap.getOrDefault(lemma, 0) + 1) );
+        lemmas.forEach(lemma -> resultMap.put(lemma, resultMap.getOrDefault(lemma, 0) + 1));
         return resultMap;
     }
 
@@ -38,11 +38,15 @@ public class MorphologyServiceImpl implements MorphologyService {
         List<String> resultList = new ArrayList<>();
         while (matcher.find()) {
             String currentWord = matcher.group();
-            if (currentWord.length() == 1 && !currentWord.equals("я")) { continue; } // т.к. лемматизатор неадекватно воспринимает некоторые одиночные буквы
+            if (currentWord.length() == 1 && !currentWord.equals("я")) {
+                continue;
+            } // т.к. лемматизатор неадекватно воспринимает некоторые одиночные буквы
             AtomicBoolean isStopWord = new AtomicBoolean(false);
             List<String> wordMorphInfo = luceneMorph.getMorphInfo(currentWord);
             wordMorphInfo.forEach(wordInfo -> {
-                if (Arrays.stream(STOP_WORDS_TYPES).anyMatch(wordInfo::contains)) { isStopWord.set(true); }
+                if (Arrays.stream(STOP_WORDS_TYPES).anyMatch(wordInfo::contains)) {
+                    isStopWord.set(true);
+                }
             });
             if (!isStopWord.get()) {
                 resultList.add(luceneMorph.getNormalForms(currentWord).get(0));
@@ -60,14 +64,18 @@ public class MorphologyServiceImpl implements MorphologyService {
 
     @Override
     public String getNormalForm(String word) {
-        if ( word.matches(REGEX_RUS_WORDS) ) { return luceneMorph.getNormalForms(word).get(0); }
-        else { return null; }
+        if (word.matches(REGEX_RUS_WORDS)) {
+            return luceneMorph.getNormalForms(word).get(0);
+        } else {
+            return null;
+        }
     }
 
     private LuceneMorphology getRusMorphology() {
         LuceneMorphology luceneMorph = null;
-        try { luceneMorph = new RussianLuceneMorphology(); }
-        catch (IOException e) {
+        try {
+            luceneMorph = new RussianLuceneMorphology();
+        } catch (IOException e) {
             log.error("Не удалось инициализировать сервис морфологии: {}", e.toString());
         }
         return luceneMorph;

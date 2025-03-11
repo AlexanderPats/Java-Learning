@@ -49,8 +49,9 @@ public class SiteCRUDService implements CRUDService<SiteEntity, Integer> {
     public SiteEntity save(SiteEntity siteEntity) {
         String siteUrl = siteEntity.getUrl();
         log.info("Saving site '{}' to table '{}'", siteUrl, tableName);
-        try { siteRepository.save(siteEntity); }
-        catch (Exception e) {
+        try {
+            siteRepository.save(siteEntity);
+        } catch (Exception e) {
             log.warn("Error while saving siteEntity '{}' to table '{}': {}", siteUrl, tableName, e.toString());
         }
         return siteEntity;
@@ -58,7 +59,7 @@ public class SiteCRUDService implements CRUDService<SiteEntity, Integer> {
 
     public void updateStatusByUrl(String url, SiteStatus newSiteStatus, String lastError) {
         log.info("Changing site status for site '{}' to: '{}' in table '{}'", url, newSiteStatus, tableName);
-        siteRepository.updateStatusByUrl( url, newSiteStatus, lastError, Instant.now() );
+        siteRepository.updateStatusByUrl(url, newSiteStatus, lastError, Instant.now());
     }
 
     @Override

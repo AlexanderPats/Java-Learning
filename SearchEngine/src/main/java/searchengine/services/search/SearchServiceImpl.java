@@ -56,19 +56,28 @@ public class SearchServiceImpl implements SearchService {
         if (query.isBlank()) {
             return new SearchResponse(false, 0, null, ResultMessage.EMPTY_REQUEST.toString(), HttpStatus.BAD_REQUEST);
         }
-        if (offset == null) { offset = 0; }
-        if (limit == null) { limit = 20; }
+        if (offset == null) {
+            offset = 0;
+        }
+        if (limit == null) {
+            limit = 20;
+        }
         this.offset = offset;
         this.limit = limit;
-        if (!query.equals(this.query)) { queryIsChanged = true; }
+        if (!query.equals(this.query)) {
+            queryIsChanged = true;
+        }
         this.query = query;
-        if (queryIsChanged) { lemmas = morphologyService.getUniqueLemmasFromText(query); }
+        if (queryIsChanged) {
+            lemmas = morphologyService.getUniqueLemmasFromText(query);
+        }
         if (lemmas.isEmpty()) {
             return new SearchResponse(
                     false, 0, null, ResultMessage.RUS_WORDS_ARE_REQUIRED.toString(), HttpStatus.BAD_REQUEST);
         }
-        if (site == null) { return searchAllSites(); }
-        else return searchSingleSite(site);
+        if (site == null) {
+            return searchAllSites();
+        } else return searchSingleSite(site);
     }
 
 
@@ -86,7 +95,9 @@ public class SearchServiceImpl implements SearchService {
         if (queryIsChanged) {
             List<LemmaEntity> lemmaEntities = lemmaService.getAllBySiteAndLemmas(siteEntity, lemmas);
 
-            if (lemmaEntities.size() < lemmas.size()) { return makeSearchResponse(List.of()); }
+            if (lemmaEntities.size() < lemmas.size()) {
+                return makeSearchResponse(List.of());
+            }
 
             delFrequentLemmasEntities(siteEntity, lemmaEntities);
             idxEntities = getIndexEntitiesWithPagesContainingAllLemmas(lemmaEntities);
@@ -105,35 +116,45 @@ public class SearchServiceImpl implements SearchService {
             List<LemmaEntity> lemmaEntities = new ArrayList<>();
             List<SiteEntity> siteEntities = siteService.getAllByStatus(SiteStatus.INDEXED);
             Set<Integer> siteIDs = new HashSet<>();
-            for (SiteEntity currentSiteEntity: siteEntities) {
+            for (SiteEntity currentSiteEntity : siteEntities) {
                 List<LemmaEntity> currentLemmaEntities = lemmaService.getAllBySiteAndLemmas(currentSiteEntity, lemmas);
-                if (currentLemmaEntities.size() < lemmas.size()) { continue; }
+                if (currentLemmaEntities.size() < lemmas.size()) {
+                    continue;
+                }
                 delFrequentLemmasEntities(currentSiteEntity, currentLemmaEntities);
                 lemmaEntities.addAll(currentLemmaEntities);
                 siteIDs.add(currentSiteEntity.getId());
             }
-            siteIDs.forEach( siteId -> {
+            siteIDs.forEach(siteId -> {
                 List<LemmaEntity> currentLemmaEntities = lemmaEntities.stream().
-                        filter( lemmaEntity -> lemmaEntity.getSiteEntity().getId().equals(siteId)).toList();
+                        filter(lemmaEntity -> lemmaEntity.getSiteEntity().getId().equals(siteId)).toList();
                 idxEntities.addAll(getIndexEntitiesWithPagesContainingAllLemmas(currentLemmaEntities));
-            } );
+            });
         }
         return makeSearchResponse(idxEntities);
     }
 
 
     private SearchResponse makeSearchResponse(List<IndexEntity> idxEntities) {
-        if (idxEntities.isEmpty()) { return new SearchResponse(true, 0, new SearchData[0], null, HttpStatus.OK); }
+        if (idxEntities.isEmpty()) {
+            return new SearchResponse(true, 0, new SearchData[0], null, HttpStatus.OK);
+        }
 
-        if (queryIsChanged) { relevanceMap = calculatePagesRelevance(idxEntities); }
+        if (queryIsChanged) {
+            relevanceMap = calculatePagesRelevance(idxEntities);
+        }
 
         if (offset > relevanceMap.size()) {
             return new SearchResponse(
                     false, null, null, ResultMessage.OFFSET_TOO_LARGE.toString(), HttpStatus.BAD_REQUEST);
         }
-        if (queryIsChanged) { pageIDs = getPageIDsArrayFromRelevanceMap(relevanceMap); }
+        if (queryIsChanged) {
+            pageIDs = getPageIDsArrayFromRelevanceMap(relevanceMap);
+        }
 
-        if (offset + limit > pageIDs.length) { limit = pageIDs.length - offset; }
+        if (offset + limit > pageIDs.length) {
+            limit = pageIDs.length - offset;
+        }
 
         int coresCount = Runtime.getRuntime().availableProcessors();
         int threadsCount = Math.min(coresCount, limit);
@@ -144,21 +165,23 @@ public class SearchServiceImpl implements SearchService {
         SearchData[] data = new SearchData[limit];
         for (int i = 0; i < limit; i++) {
             final int I = i;
-            Future<SearchData> future = poolExecutor.submit( () -> {
+            Future<SearchData> future = poolExecutor.submit(() -> {
                 SearchData searchData = getSearchData(offset + I);
                 cdLatch.countDown();
                 return searchData;
-            } );
-            try { data[i] = future.get(); }
-            catch (InterruptedException | ExecutionException e) {
+            });
+            try {
+                data[i] = future.get();
+            } catch (InterruptedException | ExecutionException e) {
                 log.warn("Метод future.get() в экземпляре класса {} вызвал исключение: {}",
                         this.getClass(), e.toString());
                 data[i] = new SearchData("???", "Не удалось получить сведения о сайте", "???", "", "", 0f);
             }
         }
 
-        try { cdLatch.await(); }
-        catch (InterruptedException e) {
+        try {
+            cdLatch.await();
+        } catch (InterruptedException e) {
             log.warn("Метод cdLatch.await в экземпляре класса {} вызвал исключение: {}",
                     this.getClass(), e.toString());
         }
@@ -177,7 +200,7 @@ public class SearchServiceImpl implements SearchService {
         Document htmlDoc = Jsoup.parse(pageEntity.getContent());
 
         TitleAndSnippet titleAndSnippet = new TitleAndSnippet(morphologyService);
-        String title = titleAndSnippet.getPageTitle(htmlDoc,lemmas);
+        String title = titleAndSnippet.getPageTitle(htmlDoc, lemmas);
         String snippet = titleAndSnippet.getSnippetForPage(htmlDoc, lemmas);
         Float relevance = relevanceMap.get(pageIDs[i]);
         if (isSingleSiteSearch) {
@@ -196,25 +219,31 @@ public class SearchServiceImpl implements SearchService {
     private List<IndexEntity> getIndexEntitiesWithPagesContainingAllLemmas(List<LemmaEntity> lemmaEntities) {
         List<IndexEntity> firstIdxEntities = indexService.getALLByLemmaEntity(lemmaEntities.get(0));
         Set<Integer> pageIDs = new HashSet<>();
-        firstIdxEntities.forEach( idxEntity -> pageIDs.add(idxEntity.getPageEntity().getId()) );
+        firstIdxEntities.forEach(idxEntity -> pageIDs.add(idxEntity.getPageEntity().getId()));
 
         for (int i = 1; i < lemmaEntities.size(); i++) {
-            if (pageIDs.isEmpty()) { return List.of(); }
+            if (pageIDs.isEmpty()) {
+                return List.of();
+            }
             List<IndexEntity> nextIdxEntities = indexService.getALLByLemmaEntity(lemmaEntities.get(i));
             final Set<Integer> pageIDsOld = new HashSet<>(pageIDs);
             pageIDs.clear();
-            nextIdxEntities.forEach( idxEntity -> {
+            nextIdxEntities.forEach(idxEntity -> {
                 Integer id = idxEntity.getPageEntity().getId();
-                if ( pageIDsOld.contains(id) ) { pageIDs.add(id); }
+                if (pageIDsOld.contains(id)) {
+                    pageIDs.add(id);
+                }
             });
         }
 
         List<IndexEntity> idxEntities = new ArrayList<>();
         final Set<Integer> pageIDsFinal = pageIDs;
-        firstIdxEntities.forEach( idxEntity -> {
-            if ( pageIDsFinal.contains(idxEntity.getPageEntity().getId()) ) { idxEntities.add(idxEntity); }
-        } );
-        
+        firstIdxEntities.forEach(idxEntity -> {
+            if (pageIDsFinal.contains(idxEntity.getPageEntity().getId())) {
+                idxEntities.add(idxEntity);
+            }
+        });
+
         return idxEntities;
     }
 
@@ -226,15 +255,15 @@ public class SearchServiceImpl implements SearchService {
     private Map<Integer, Float> calculatePagesRelevance(List<IndexEntity> idxEntities) {
 
         Map<Integer, Integer> absoluteRelevanceMap = new HashMap<>();
-        idxEntities.forEach( idxEntity ->
-            absoluteRelevanceMap.merge( idxEntity.getPageEntity().getId(), idxEntity.getRank(), Integer::sum)
+        idxEntities.forEach(idxEntity ->
+                absoluteRelevanceMap.merge(idxEntity.getPageEntity().getId(), idxEntity.getRank(), Integer::sum)
         );
         int maxRank = absoluteRelevanceMap.values().stream().max(Integer::compare).orElse(0);
         assert maxRank > 0;
 
         Map<Integer, Float> relativeRelevanceMap = new HashMap<>();
-        absoluteRelevanceMap.forEach( (pageId, absoluteRelevance) ->
-                relativeRelevanceMap.put(pageId, (float) absoluteRelevance / maxRank) );
+        absoluteRelevanceMap.forEach((pageId, absoluteRelevance) ->
+                relativeRelevanceMap.put(pageId, (float) absoluteRelevance / maxRank));
 
         Map<Integer, Float> relevanceSortedMap = new LinkedHashMap<>();
         relativeRelevanceMap.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).
@@ -250,7 +279,7 @@ public class SearchServiceImpl implements SearchService {
         relevanceMap.forEach((pageId, relevance) -> {
             pageIDs[i.get()] = pageId;
             i.getAndIncrement();
-        } );
+        });
         return pageIDs;
     }
 
@@ -265,8 +294,8 @@ public class SearchServiceImpl implements SearchService {
         Iterator<LemmaEntity> iterator = lemmaEntities.iterator();
         while (lemmaEntities.size() > 1 && iterator.hasNext()) {
             LemmaEntity lemmaEntity = iterator.next();
-            if ( lemmaEntity.getFrequency() == pageService.getCountBySiteEntity(siteEntity) ||
-                    lemmaEntity.getFrequency() > MAX_NUM_PAGES ) {
+            if (lemmaEntity.getFrequency() == pageService.getCountBySiteEntity(siteEntity) ||
+                    lemmaEntity.getFrequency() > MAX_NUM_PAGES) {
                 iterator.remove();
             }
         }

@@ -44,17 +44,20 @@ public class SitesIndexServiceImpl implements SitesIndexService {
 
         for (Site site : indexingSettings.getSites()) {
             if (stopIndexingFlag) {
-                while (cdLatch.getCount() > 0) { cdLatch.countDown(); }
+                while (cdLatch.getCount() > 0) {
+                    cdLatch.countDown();
+                }
                 break;
             }
-            poolExecutor.execute( () -> {
+            poolExecutor.execute(() -> {
                 indexSiteTask(site);
                 cdLatch.countDown();
-            } );
+            });
         }
 
-        try { cdLatch.await(); }
-        catch (InterruptedException e) {
+        try {
+            cdLatch.await();
+        } catch (InterruptedException e) {
             log.warn("Метод cdLatch.await в экземпляре класса {} вызвал исключение: {}",
                     this.getClass(), e.toString());
         }
@@ -72,18 +75,19 @@ public class SitesIndexServiceImpl implements SitesIndexService {
         RecursivePageIndexing.setStoppingIndexing(true);
         fjpList.forEach(ForkJoinPool::shutdown);
         poolExecutor.shutdown();
-        try { poolExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); }
-        catch (InterruptedException e) {
+        try {
+            poolExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
             log.warn("Метод awaitTermination в экземпляре класса {} вызвал исключение: {}",
                     this.getClass(), e.toString());
         }
-        indexingSettings.getSites().forEach( site -> {
+        indexingSettings.getSites().forEach(site -> {
             SiteEntity siteEntity = siteService.getByUrl(site.getUrl());
-            if (siteEntity !=null && siteEntity.getStatus() == SiteStatus.INDEXING) {
+            if (siteEntity != null && siteEntity.getStatus() == SiteStatus.INDEXING) {
                 siteService.updateStatusByUrl(
-                        site.getUrl(), SiteStatus.FAILED, ResultMessage.INDEXING_IS_CANCELED.toString() );
+                        site.getUrl(), SiteStatus.FAILED, ResultMessage.INDEXING_IS_CANCELED.toString());
             }
-        } );
+        });
     }
 
 
@@ -93,13 +97,17 @@ public class SitesIndexServiceImpl implements SitesIndexService {
             log.warn(ResultMessage.EMPTY_REQUEST.toString());
             return ResultMessage.EMPTY_REQUEST;
         }
-        if (!pageUrl.startsWith("https://") && !pageUrl.startsWith("http://")) { return ResultMessage.NO_PROTOCOL; }
+        if (!pageUrl.startsWith("https://") && !pageUrl.startsWith("http://")) {
+            return ResultMessage.NO_PROTOCOL;
+        }
 
         Document htmlDoc = pageIndexService.getHtmlDocument(
-                pageUrl, indexingSettings.getUserAgent(), indexingSettings.getReferrer() );
+                pageUrl, indexingSettings.getUserAgent(), indexingSettings.getReferrer());
 
         ResultMessage checkPageMsg = pageIndexService.checkHTMLDocument(htmlDoc);
-        if (checkPageMsg != ResultMessage.PAGE_IS_CHECKED) { return checkPageMsg; }
+        if (checkPageMsg != ResultMessage.PAGE_IS_CHECKED) {
+            return checkPageMsg;
+        }
 
         pageUrl = htmlDoc.connection().response().url().toString();
 
@@ -111,8 +119,11 @@ public class SitesIndexServiceImpl implements SitesIndexService {
             return ResultMessage.PAGE_IS_OUTSIDE_THE_SITES;
         }
         String path = siteParams[2];
-        try { path = pageIndexService.normalizePath(path, siteUrl, indexingSettings); }
-        catch (RuntimeException e) { return ResultMessage.getByValue(e.getMessage()); }
+        try {
+            path = pageIndexService.normalizePath(path, siteUrl, indexingSettings);
+        } catch (RuntimeException e) {
+            return ResultMessage.getByValue(e.getMessage());
+        }
 
         SiteEntity siteEntity = siteService.getByUrl(siteUrl);
         String siteName = siteParams[1];
@@ -163,7 +174,7 @@ public class SitesIndexServiceImpl implements SitesIndexService {
     private ResultMessage indexSite(SiteEntity siteEntity) {
 
         RecursivePageIndexing recursivePageIndexing =
-                new RecursivePageIndexing( pageIndexService, siteEntity, indexingSettings);
+                new RecursivePageIndexing(pageIndexService, siteEntity, indexingSettings);
 
         ForkJoinPool forkJoinPool = new ForkJoinPool();
         fjpList.add(forkJoinPool);
@@ -188,8 +199,7 @@ public class SitesIndexServiceImpl implements SitesIndexService {
         if (index == -1) {
             siteUrl = pageUrl;
             pagePath = "/";
-        }
-        else {
+        } else {
             index += 3;
             siteUrl = pageUrl.substring(0, index);
             pagePath = pageUrl.substring(index);
@@ -198,7 +208,7 @@ public class SitesIndexServiceImpl implements SitesIndexService {
         siteUrl = indexingSettings.getResponseSiteUrl(siteUrl);
 
         for (Site site : indexingSettings.getSites()) {
-            if ( siteUrl.equals(site.getUrl()) ) {
+            if (siteUrl.equals(site.getUrl())) {
                 result[0] = site.getUrl();
                 result[1] = site.getName();
                 return result;
